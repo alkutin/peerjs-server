@@ -4,51 +4,48 @@
 
 PeerServer helps broker connections between PeerJS clients. Data is not proxied through the server.
 
-##[http://peerjs.com](http://peerjs.com)
-
-**If you prefer to use a cloud hosted PeerServer instead of running your own, [sign up for a free API key here](http://peerjs.com/peerserver)**
-
-or
-
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://www.heroku.com/deploy/?template=https://github.com/peers/peerjs-server)
+## [https://peerjs.com](https://peerjs.com)
 
 ### Run PeerServer
 
-Install the library:
-
+1. Clone app:
 ```bash
-$> npm install peer
+git clone https://github.com/peers/peerjs-server.git
 ```
 
-Run the server:
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Run the server:
 
 ```bash
-$> peerjs --port 9000 --key peerjs
+$> peerjs --port 9000 --key peerjs --path /mypapp
 ```
 
 Or, create a custom server:
 
 ```javascript
-var PeerServer = require('peer').PeerServer;
-var server = PeerServer({port: 9000, path: '/myapp'});
+const PeerServer = require('peer').PeerServer;
+const server = PeerServer({port: 9000, path: '/myapp'});
 ```
 
 Connecting to the server from PeerJS:
 
 ```html
 <script>
-    // No API key required when not using cloud server
-    var peer = new Peer('someid', {host: 'localhost', port: 9000, path: '/myapp'});
+    const peer = new Peer('someid', {host: 'localhost', port: 9000, path: '/myapp'});
 </script>
 ```
 
 Using HTTPS: Simply pass in PEM-encoded certificate and key.
 
 ```javascript
-var fs = require('fs');
-var PeerServer = require('peer').PeerServer;
+const fs = require('fs');
+const PeerServer = require('peer').PeerServer;
 
-var server = PeerServer({
+const server = PeerServer({
   port: 9000,
   ssl: {
     key: fs.readFileSync('/path/to/your/ssl/key/here.key'),
@@ -65,34 +62,41 @@ The option is passed verbatim to the
 if it is truthy.
 
 ```javascript
-var PeerServer = require('peer').PeerServer;
-var server = PeerServer({port: 9000, path: '/myapp', proxied: true});
+const PeerServer = require('peer').PeerServer;
+const server = PeerServer({port: 9000, path: '/myapp', proxied: true});
 ```
 
 ### Combining with existing express app
 
 ```javascript
-var express = require('express');
-var app = express();
-var ExpressPeerServer = require('peer').ExpressPeerServer;
+const express = require('express');
+const app = express();
+const ExpressPeerServer = require('peer').ExpressPeerServer;
 
-app.get('/', function(req, res, next) { res.send('Hello world!'); });
+app.get('/', (req, res, next) => { res.send('Hello world!'); });
 
-var server = app.listen(9000);
+// =======
 
-var options = {
+const server = app.listen(9000);
+
+const options = {
     debug: true
 }
 
-app.use('/api', ExpressPeerServer(server, options));
+const peerserver = ExpressPeerServer(server, options);
 
-// OR
+app.use('/api', peerserver);
 
-var server = require('http').createServer(app);
+// == OR ==
 
-app.use('/peerjs', ExpressPeerServer(server, options));
+const server = require('http').createServer(app);
+const peerserver = ExpressPeerServer(server, options);
+
+app.use('/peerjs', peerserver);
 
 server.listen(9000);
+
+// ========
 ```
 
 ### Events
@@ -100,15 +104,35 @@ server.listen(9000);
 The `'connection'` event is emitted when a peer connects to the server.
 
 ```javascript
-server.on('connection', function(id) { ... });
+peerserver.on('connection', (client) => { ... });
 ```
 
 The `'disconnect'` event is emitted when a peer disconnects from the server or
 when the peer can no longer be reached.
 
 ```javascript
-server.on('disconnect', function(id) { ... });
+peerserver.on('disconnect', (client) => { ... });
 ```
+
+## Running tests
+
+```bash
+npm test
+```
+
+## Docker
+
+You can build this image simply by calling:
+```bash
+docker build -t peerjs https://github.com/peers/peerjs-server.git
+```
+
+To run the image execute this:  
+```bash
+docker run -p 9000:9000 -d peerjs
+```
+
+This will start a peerjs server on port 9000 exposed on port 9000.
 
 ## Problems?
 
